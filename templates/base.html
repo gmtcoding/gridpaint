@@ -67,7 +67,6 @@
         socket.on('connect', ()=>{          
           console.log('Is connected!');
           socket.emit('client_event',{data:'yohooooo!'});
-          return true;
         });
        
       });

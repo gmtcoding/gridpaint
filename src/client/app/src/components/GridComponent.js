@@ -8,15 +8,15 @@ import {connect} from 'react-redux';
 class GridComponent extends React.Component {                
     
     constructor(props){
-        super()
+        super(props)
         this.canvasRef = createRef()
         this.CELL_WIDTH = 25;
         this.WIDTH = 500;
         this.MARGIN = 5;
         this.state = {
-            gridData : props.gridData,
-            gridId : props.gridId,
-            onGridClicked : props.onGridClick
+            gridData : this.props.gridData,
+            gridId : this.props.gridId,
+            onGridClicked : this.props.onGridClick
         }
 
     }
@@ -26,7 +26,7 @@ class GridComponent extends React.Component {
         console.log('My id is ' + this.state.gridId);        
     }
     
-    drawGrid = (ctx, gd) => {
+    drawGrid = (ctx) => {
         
         ctx.clearRect(0,0,this.WIDTH+this.MARGIN, this.WIDTH+this.MARGIN);
         for(let i=0; i < this.WIDTH/this.CELL_WIDTH+1; i++){ //rows
@@ -42,8 +42,8 @@ class GridComponent extends React.Component {
 
         }                     
         
-        for(const [key, value] of Object.entries(gd)){                        
-            if (gd[key]){                
+        for(const [key, value] of Object.entries(this.state.gridData)){                        
+            if (this.state.gridData[key]){                
                 let loc = {x:key.split('|')[0], y:key.split('|')[1]}            
                 ctx.fillRect(loc.y*this.CELL_WIDTH + this.MARGIN, loc.x*this.CELL_WIDTH + this.MARGIN, this.CELL_WIDTH,this.CELL_WIDTH);
             }
@@ -62,16 +62,16 @@ class GridComponent extends React.Component {
             var key = this.locToCell(loc);       
             var skey = `${key.row}|${key.col}`
             
-            if (this.gridData[skey]){
-                this.gridData[skey]=null;                    
+            if (this.state.gridData[skey]){
+                this.state.gridData[skey]=null;                    
             }     
             else{                
-                this.gridData[skey] = {color:'red'};                              
+                this.state.gridData[skey] = {color:'red'};                              
             }                                                
             
             this.drawGrid(ctx, this.state.gridData);                 
             if (this.state.onGridClicked != null){
-                this.state.onGridClicked({'id':this.state.gridId, 'data':this.state.gridData});
+                this.state.onGridClicked({'gridId':this.state.gridId, 'gridData':this.state.gridData});
             }
             
         }
@@ -84,7 +84,7 @@ class GridComponent extends React.Component {
             height = {this.WIDTH+this.MARGIN}        
             onClick = {
                 e => {
-                    const canvas = this.canvasRef
+                    const canvas = this.canvasRef.current
                     const ctx = canvas.getContext('2d');
                     this.processClick(ctx,{x:e.clientX, y:e.clientY})
                 }

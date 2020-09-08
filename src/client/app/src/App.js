@@ -37,15 +37,15 @@ class App extends React.Component {
     socket.on('grid_was_updated',(msg, callback)=>{
 
       console.log(msg['updated_by'] + ' updated grid to ...')
-      console.log(msg['data'])
+      console.log(msg['gridData'])
       this.props.dispatch({
         type:'GRID_WAS_CLICKED',
         payload:{
-          gridData:msg['data'],
+          gridData:msg['gridData'],
           gridId:this.state.gridId
         }
       })
-      this.setState({gridData:msg['data']})
+      this.setState({gridData:msg['gridData']})
     })
     socket.on('connect',()=>{
       console.log('Socket is opened and connected.')      
@@ -70,7 +70,7 @@ class App extends React.Component {
   render(){
     return (
       <div className="App">          
-          <GridComponent grid={this.state.gridData} onGridClicked={this.gridClickProcessor} gridId={this.state.gridId}/>    
+          <GridComponent gridData={this.state.gridData} onGridClicked={this.gridClickProcessor} gridId={this.state.gridId}/>    
           <button onClick={this.onButtonClicked}>Click me</button>
       </div>
     );

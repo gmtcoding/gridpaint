@@ -1,83 +1,98 @@
-import React, {
-    Component,
-    useState,
-    useRef,
-    useEffect
-} from 'react'
+import React, 
+    {    
+        createRef
+    }    
+ from 'react'
+import {connect} from 'react-redux';
 
-export default function GridComponent(grid) {
+class GridComponent extends React.Component {                
     
-    const canvasRef = useRef(null);
-    
-    const CELL_WIDTH=25;
-    const WIDTH = 500;    
-    const MARGIN = 5;
-    const [gridData,setGridData] = useState({});
-    
-    useEffect(()=>{
-        const ctx = canvasRef.current.getContext('2d');
-        drawGrid(ctx);        
-    })   
-
-    function drawGrid(ctx){
-        
-        ctx.clearRect(0,0,WIDTH+MARGIN, WIDTH+MARGIN);
-        for(let i=0; i < WIDTH/CELL_WIDTH+1; i++){ //rows
-            ctx.beginPath()
-            ctx.moveTo(MARGIN,MARGIN + i*CELL_WIDTH);
-            ctx.lineTo(WIDTH +MARGIN, MARGIN + i*CELL_WIDTH);
-            ctx.stroke();
+    constructor(props){
+        super()
+        this.canvasRef = createRef()
+        this.CELL_WIDTH = 25;
+        this.WIDTH = 500;
+        this.MARGIN = 5;
+        this.state = {
+            gridData : props.gridData,
+            gridId : props.gridId,
+            onGridClicked : props.onGridClick
         }
 
-        for(let i=0; i < (WIDTH/CELL_WIDTH) +1; i++){ //cols
-            ctx.beginPath()
-            ctx.moveTo(MARGIN+i*CELL_WIDTH,MARGIN);
-            ctx.lineTo(MARGIN+i*CELL_WIDTH , MARGIN + WIDTH);
-            ctx.stroke();
-        }                        
+    }
+    componentDidMount(){
+        const ctx = this.canvasRef.current.getContext('2d');        
+        this.drawGrid(ctx,this.state.gridData);   
+        console.log('My id is ' + this.state.gridId);        
+    }
+    
+    drawGrid = (ctx, gd) => {
         
-        for(const [key, value] of Object.entries(gridData)){            
-            let loc = {x:key.split('|')[0], y:key.split('|')[1]}            
-            if (gridData[key]){                
-                ctx.fillRect(loc.y*CELL_WIDTH + MARGIN, loc.x*CELL_WIDTH + MARGIN, CELL_WIDTH,CELL_WIDTH);
+        ctx.clearRect(0,0,this.WIDTH+this.MARGIN, this.WIDTH+this.MARGIN);
+        for(let i=0; i < this.WIDTH/this.CELL_WIDTH+1; i++){ //rows
+            ctx.beginPath()
+            ctx.moveTo(this.MARGIN,this.MARGIN + i*this.CELL_WIDTH);
+            ctx.lineTo(this.WIDTH +this.MARGIN, this.MARGIN + i*this.CELL_WIDTH);
+            ctx.stroke();
+            
+            ctx.beginPath()
+            ctx.moveTo(this.MARGIN+i*this.CELL_WIDTH,this.MARGIN);
+            ctx.lineTo(this.MARGIN+i*this.CELL_WIDTH , this.MARGIN + this.WIDTH);
+            ctx.stroke();
+
+        }                     
+        
+        for(const [key, value] of Object.entries(gd)){                        
+            if (gd[key]){                
+                let loc = {x:key.split('|')[0], y:key.split('|')[1]}            
+                ctx.fillRect(loc.y*this.CELL_WIDTH + this.MARGIN, loc.x*this.CELL_WIDTH + this.MARGIN, this.CELL_WIDTH,this.CELL_WIDTH);
             }
         }
     } 
-    function locToCell(loc){
+    locToCell = (loc) => {
         
         return{
-            row:Math.trunc((loc.y - MARGIN)/CELL_WIDTH),
-            col:Math.trunc((loc.x - MARGIN)/CELL_WIDTH)
+            row:Math.trunc((loc.y - this.MARGIN)/this.CELL_WIDTH),
+            col:Math.trunc((loc.x - this.MARGIN)/this.CELL_WIDTH)
         }
     }
-    function processClick(ctx, loc){
-        if (loc.x >= MARGIN && loc.x <= WIDTH+MARGIN && loc.y >= MARGIN && loc.y <= WIDTH+MARGIN)            
+    processClick = (ctx, loc) => {
+        if (loc.x >= this.MARGIN && loc.x <= this.WIDTH+this.MARGIN && loc.y >= this.MARGIN && loc.y <= this.WIDTH+this.MARGIN)            
         {
-            var key = locToCell(loc);       
+            var key = this.locToCell(loc);       
             var skey = `${key.row}|${key.col}`
             
-            if (gridData[skey]){
-                gridData[skey]=null;                    
+            if (this.gridData[skey]){
+                this.gridData[skey]=null;                    
             }     
-            else{
-                gridData[skey] = {color:'red'};                              
-            }            
+            else{                
+                this.gridData[skey] = {color:'red'};                              
+            }                                                
             
-            setGridData(gridData);
-            drawGrid(ctx);            
+            this.drawGrid(ctx, this.state.gridData);                 
+            if (this.state.onGridClicked != null){
+                this.state.onGridClicked({'id':this.state.gridId, 'data':this.state.gridData});
+            }
+            
         }
     }
-    return ( <canvas 
-        ref = {canvasRef}
-        width = {WIDTH+MARGIN}
-        height = {WIDTH+MARGIN}        
-        onClick = {
-            e => {
-                const canvas = canvasRef.current
-                const ctx = canvas.getContext('2d');
-                processClick(ctx,{x:e.clientX, y:e.clientY})
+    render()
+    {
+        return ( <canvas 
+            ref = {this.canvasRef}
+            width = {this.WIDTH+this.MARGIN}
+            height = {this.WIDTH+this.MARGIN}        
+            onClick = {
+                e => {
+                    const canvas = this.canvasRef
+                    const ctx = canvas.getContext('2d');
+                    this.processClick(ctx,{x:e.clientX, y:e.clientY})
+                }
             }
-        }
-        />
-    )
+            />
+        )
+    }
+    
 }
+
+export default GridComponent;

@@ -6,16 +6,20 @@ const uuidv4 = () => {
   }
 
 const intitialState = {
-    gridData: {"1|1":{color:'red'}, "2|1":{color:'green'},"3|3":{color:'blue'},"4|4":{color:'green'}},
-    gridId: uuidv4()
+    gridData: {"1|1":{color:'cyan'}, "2|1":{color:'cyan'},"3|3":{color:'cyan'},"4|4":{color:'cyan'}},    
+    gridId: navigator.userAgent.indexOf('Firefox')>0?'Firefox':'Chrome'
 }
 
 
 const reducer = (state = intitialState, action) =>{
     switch (action.type){
-        case 'GRID_WAS_CLICKED':{            
+        case 'GRID_WAS_UPDATED':{               
+            //console.log('Me: ' + state.gridId + ' Source gridId: ' +  action.payload.gridId)                            
+            //console.log('grid is being updated ')
+            console.log(action)
             return Object.assign({}, state,{
-                gridData:action.payload
+                gridData:action.payload.gridData,
+                gridId:state.gridId                
             })
         }
         case 'TEST':{

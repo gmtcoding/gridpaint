@@ -14,20 +14,30 @@ class GridComponent extends React.Component {
         this.WIDTH = 500;
         this.MARGIN = 5;
         this.state = {
-            gridData : this.props.gridData,
-            gridId : this.props.gridId,
-            onGridClicked : this.props.onGridClick
+            gridData : props.gridData, //will be controlled by redux
+            gridId : props.gridId, //will be controlled by redux (named in initialState)           
+            onGridClicked : props.onGridClicked
         }
 
     }
     componentDidMount(){
-        const ctx = this.canvasRef.current.getContext('2d');        
-        this.drawGrid(ctx,this.state.gridData);   
-        console.log('My id is ' + this.state.gridId);        
+        console.log('in componentDidMount - grid')        
+        this.drawGrid()        
     }
     
-    drawGrid = (ctx) => {
         
+    componentDidUpdate(prevProps)           
+    {
+        console.log(prevProps)
+        if (this.state.gridData != prevProps.gridData){   
+            console.log('Recieved a draw instruction')                   
+            this.setState({gridData:prevProps.gridData})            
+        }
+        this.drawGrid()
+    }
+        
+    drawGrid = () => {
+        const ctx = this.canvasRef.current.getContext('2d');                
         ctx.clearRect(0,0,this.WIDTH+this.MARGIN, this.WIDTH+this.MARGIN);
         for(let i=0; i < this.WIDTH/this.CELL_WIDTH+1; i++){ //rows
             ctx.beginPath()
@@ -45,6 +55,7 @@ class GridComponent extends React.Component {
         for(const [key, value] of Object.entries(this.state.gridData)){                        
             if (this.state.gridData[key]){                
                 let loc = {x:key.split('|')[0], y:key.split('|')[1]}            
+                ctx.fillStyle = this.state.gridData[key].color
                 ctx.fillRect(loc.y*this.CELL_WIDTH + this.MARGIN, loc.x*this.CELL_WIDTH + this.MARGIN, this.CELL_WIDTH,this.CELL_WIDTH);
             }
         }
@@ -56,24 +67,22 @@ class GridComponent extends React.Component {
             col:Math.trunc((loc.x - this.MARGIN)/this.CELL_WIDTH)
         }
     }
-    processClick = (ctx, loc) => {
+    processClick = (loc) => {
         if (loc.x >= this.MARGIN && loc.x <= this.WIDTH+this.MARGIN && loc.y >= this.MARGIN && loc.y <= this.WIDTH+this.MARGIN)            
         {
             var key = this.locToCell(loc);       
             var skey = `${key.row}|${key.col}`
-            
-            if (this.state.gridData[skey]){
-                this.state.gridData[skey]=null;                    
+            var gridCopy = {...this.state.gridData}
+            if (gridCopy[skey]){
+                gridCopy[skey]=null;                    
             }     
             else{                
-                this.state.gridData[skey] = {color:'red'};                              
-            }                                                
+                gridCopy[skey] = {color:this.state.gridId.indexOf('Firefox')>0?'blue':'red'};                              
+            }                                                                        
             
-            this.drawGrid(ctx, this.state.gridData);                 
-            if (this.state.onGridClicked != null){
-                this.state.onGridClicked({'gridId':this.state.gridId, 'gridData':this.state.gridData});
-            }
-            
+            if (this.state.onGridClicked != null){                
+                this.state.onGridClicked({'gridId':this.state.gridId, 'gridData':gridCopy});
+            }                          
         }
     }
     render()
@@ -83,16 +92,27 @@ class GridComponent extends React.Component {
             width = {this.WIDTH+this.MARGIN}
             height = {this.WIDTH+this.MARGIN}        
             onClick = {
-                e => {
-                    const canvas = this.canvasRef.current
-                    const ctx = canvas.getContext('2d');
-                    this.processClick(ctx,{x:e.clientX, y:e.clientY})
+                e => {                    
+                    this.processClick({x:e.clientX, y:e.clientY})
                 }
             }
             />
         )
-    }
-    
+    }    
 }
 
-export default GridComponent;
+const mapDispatchToProps = dispatch =>{
+    return {
+      dispatch
+    }
+}
+
+
+const mapStateToProps = state=>{
+    return {
+      gridId:state.gridId,
+      gridData:state.gridData
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(GridComponent);

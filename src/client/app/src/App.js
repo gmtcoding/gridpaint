@@ -9,32 +9,30 @@ class App extends React.Component {
       (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     );
   }
+
+  randomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16);
+  
+end
   constructor(){
     super()    
     this.state = {      
       wSocket:null,
       initialized:false,
-      gridData:{'1|1':{'color':'blue'}, '2|1':{'color':'blue'},'3|3':{'color':'blue'},'4|4':{'color':'blue'}}
+      gridData:{},
+      updateId:this.uuidv4(),
+      redrawGrid:true     
     }
   }
   componentDidMount(){
     console.log('in componentDidMount()')
-    console.log(this.state.gridData)    
-    this.connectToServer()
+    console.log(this.state.gridData);
+    setTimeout(this.connectToServer(),5000);    
   }
   
   gridClickProcessor = (message)=>
   {               
-      if (this.state.initialized){
-        console.log(message)
-        this.props.dispatch({
-          type:'GRID_WAS_UPDATED',
-          payload:{
-            gridData:message['gridData'],
-            updatedBy:message['gridId']          
-          }
-        })
-        this.state.wSocket.emit('grid_to_update', JSON.stringify(message));           
+      if (this.state.initialized){                
+        this.state.wSocket.emit('update_grid', JSON.stringify(message));           
       }
       else{
         console.log('Not initialized');
@@ -43,35 +41,35 @@ class App extends React.Component {
   }  
   connectToServer = ()=> {
     var socket = io('localhost:8090');
-    socket.on('grid_was_updated',(msg, callback)=>{    
-      console.log('Received an update')
-      console.log('Grid id is ' + this.state.gridId)
-      console.log('Updated by ' + msg['updatedBy'])
-      //if (this.state.gridId != msg['updatedBy'])
-      //    return;
-      console.log('Processing update')
-      this.setState({initialized:true}); 
-      this.setState({gridData:msg['gridData']})
+    socket.on('initialize',(msg, callback)=>{      
+      this.props.dispatch({type:'INITIALIZE_GRID',payload:{
+        gridData:msg['gridData']
+      }})
+      this.setState({initialized:true});       
     })
-    //--------------------------------------
+    socket.on('update_command',(msg, callback)=>{                
+      if (this.props.gridId != msg['updatedBy']){                
+        this.props.dispatch({
+          type:'UPDATE_COMMAND',
+          payload:{
+            updateCommand:msg['updateCommand'],
+            updatedBy:msg['gridId'],
+            redrawGrid:!this.state.redrawGrid         
+          }
+        })        
+      }
+      
+    })    
     socket.on('connect',()=>{
       console.log('Socket is opened. Ready for COMMS.')      
-    });  
-    
-    this.setState({wSocket:socket})    
-    
-  };  
+    });      
+    this.setState({wSocket:socket})        
+  };    
   
-  onButtonClicked = (e)=>{        
-    console.log(e);
-  }    
-  render(){
-    console.log('in render()')
-    console.log(this.state.gridData)
+  render(){     
     return (
       <div className="App">          
-          <GridComponent onGridClicked={this.gridClickProcessor} gridId={this.state.gridId} gridData={this.state.gridData}/>    
-          <button onClick={this.onButtonClicked}>Click me</button>
+          <GridComponent paintingColor = {this.randomColor()} redrawGrid={this.state.redrawGrid} width={500} margin={5} cellWidth={25} onGridClicked={this.gridClickProcessor} gridId={this.state.gridId} gridData={this.state.gridData}/>              
       </div>
     );
   }  
@@ -81,13 +79,11 @@ const mapDispatchToProps = dispatch =>{
     dispatch
   }
 }
-const mapStateToProps = state=>{
-  console.log('in mapStateToProps')
-  console.log(state)  
+const mapStateToProps = state=>{  
   return {
     gridId:state.gridId,
     gridData:state.gridData,
-    counter:100
+    redrawGrid:state.redrawGrid    
   }
 }
 

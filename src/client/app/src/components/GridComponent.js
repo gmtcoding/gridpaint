@@ -10,33 +10,25 @@ class GridComponent extends React.Component {
     constructor(props){
         super(props)
         this.canvasRef = createRef()
-        this.CELL_WIDTH = 25;
-        this.WIDTH = 500;
-        this.MARGIN = 5;
+        this.CELL_WIDTH = props.cellWidth;
+        this.WIDTH = props.width;
+        this.MARGIN = props.margin;
         this.state = {
-            gridData : props.gridData, //will be controlled by redux
-            gridId : props.gridId, //will be controlled by redux (named in initialState)           
-            onGridClicked : props.onGridClicked
+            gridData : {},
+            gridId : props.gridId,
+            onGridClicked : props.onGridClicked,
+            redrawGrid: !props.redrawGrid,
+            paintingColor : props.paintingColor
         }
 
-    }
-    componentDidMount(){
-        console.log('in componentDidMount - grid')        
-        this.drawGrid()        
-    }
+    }    
     
-        
     componentDidUpdate(prevProps)           
-    {
-        console.log(prevProps)
-        if (this.state.gridData != prevProps.gridData){   
-            console.log('Recieved a draw instruction')                   
-            this.setState({gridData:prevProps.gridData})            
-        }
-        this.drawGrid()
+    {           
+        this.drawGrid()     
     }
         
-    drawGrid = () => {
+    drawGrid = () => {                
         const ctx = this.canvasRef.current.getContext('2d');                
         ctx.clearRect(0,0,this.WIDTH+this.MARGIN, this.WIDTH+this.MARGIN);
         for(let i=0; i < this.WIDTH/this.CELL_WIDTH+1; i++){ //rows
@@ -50,15 +42,14 @@ class GridComponent extends React.Component {
             ctx.lineTo(this.MARGIN+i*this.CELL_WIDTH , this.MARGIN + this.WIDTH);
             ctx.stroke();
 
-        }                     
-        
-        for(const [key, value] of Object.entries(this.state.gridData)){                        
-            if (this.state.gridData[key]){                
+        }                             
+        for(const [key, value] of Object.entries(this.props.gridData)){                        
+            if (this.props.gridData[key]){                
                 let loc = {x:key.split('|')[0], y:key.split('|')[1]}            
-                ctx.fillStyle = this.state.gridData[key].color
+                ctx.fillStyle = this.props.gridData[key].color
                 ctx.fillRect(loc.y*this.CELL_WIDTH + this.MARGIN, loc.x*this.CELL_WIDTH + this.MARGIN, this.CELL_WIDTH,this.CELL_WIDTH);
             }
-        }
+        }        
     } 
     locToCell = (loc) => {
         
@@ -77,12 +68,20 @@ class GridComponent extends React.Component {
                 gridCopy[skey]=null;                    
             }     
             else{                
-                gridCopy[skey] = {color:this.state.gridId.indexOf('Firefox')>0?'blue':'red'};                              
-            }                                                                        
-            
+                gridCopy[skey] = {color:this.state.paintingColor};                              
+            }   
+            const payload = {
+                'updateCommand':{'command':gridCopy[skey]!==null?'PAINT':'DELETE', 'location':skey, 'color':this.state.paintingColor},
+                'updatedBy':this.state.gridId
+            }                                                                     
+            this.props.dispatch({
+                type:'UPDATE_COMMAND',
+                payload
+              })
             if (this.state.onGridClicked != null){                
-                this.state.onGridClicked({'gridId':this.state.gridId, 'gridData':gridCopy});
-            }                          
+                this.state.onGridClicked(payload);                                
+            }   
+            this.drawGrid()       
         }
     }
     render()
@@ -111,7 +110,8 @@ const mapDispatchToProps = dispatch =>{
 const mapStateToProps = state=>{
     return {
       gridId:state.gridId,
-      gridData:state.gridData
+      gridData:state.gridData,
+      redrawGrid:state.redrawGrid
     }
 }
 

@@ -17,14 +17,16 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     print('****** A client connected. ******')
-    emit('grid_was_updated', {'updatedBy': 'init', 'gridData': grid_data})    
+    emit('initialize', {'updatedBy': 'init', 'gridData': grid_data})
 
 
-@socketio.on('grid_to_update')
+@socketio.on('update_grid')
 def handle_grid_update(msg):
-    grid_data = json.loads(msg)
-    print('Received grid_to_update message from client ', grid_data['gridId'])    
-    emit('grid_was_updated', {'updatedBy': grid_data['gridId'], 'gridData': grid_data['gridData']}, broadcast=True)
+    update_command = json.loads(msg)    
+    print('Received update_grid message from client ', update_command)    
+    print(update_command)
+    grid_data[update_command['updateCommand']['location']] = update_command['updateCommand']['color']
+    emit('update_command', update_command, broadcast=True)
 
 
 if __name__ == "__main__":

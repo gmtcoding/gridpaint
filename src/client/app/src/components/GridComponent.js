@@ -74,8 +74,7 @@ class GridComponent extends React.Component {
               })
             if (this.state.onGridClicked != null){                
                 this.state.onGridClicked(payload);                                
-            }   
-            this.drawGrid()       
+            }                   
         }
     }
     render()

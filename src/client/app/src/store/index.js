@@ -45,17 +45,19 @@ const reducer = (state = intitialState, action) =>{
                 gridId:state.gridId,
                 redrawGrid:state.redrawGrid
             }
-        }
+        }        
         case 'UPDATE_COMMAND':{            
             switch(action.payload.updateCommand.command){
                 case 'PAINT':
                     console.log(`PAINT ${action.payload.updateCommand.location} with color ${action.payload.updateCommand.color} received`)
-                    let stateT = {...state}                    
-                    stateT.gridData[action.payload.updateCommand.location] = {color:action.payload.updateCommand.color}                    
+                    let stateT = {...state}        
+                    if (action.payload.updateCommand.location in stateT.gridData)
+                        delete stateT.gridData[action.payload.updateCommand.location]
+                    else
+                        stateT.gridData[action.payload.updateCommand.location] = {color:action.payload.updateCommand.color}                    
                     return {...state,
                         gridData : stateT.gridData,                                                 
-                        redrawGrid: !state.redrawGrid};                                                            
-                    
+                        redrawGrid: !state.redrawGrid};                                                                            
                 default:
                     console.log('Unknown UPDATE_COMMAND type received.')
             }

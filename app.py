@@ -23,8 +23,7 @@ def handle_connect():
 @socketio.on('update_grid')
 def handle_grid_update(msg):
     update_command = json.loads(msg)    
-    print('Received update_grid message from client ', update_command)    
-    print(update_command)
+    print('Received update_grid message from client ', update_command)        
     grid_data[update_command['updateCommand']['location']] = update_command['updateCommand']['color']
     emit('update_command', update_command, broadcast=True)
 

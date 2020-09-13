@@ -62,16 +62,10 @@ class GridComponent extends React.Component {
         if (loc.x >= this.MARGIN && loc.x <= this.WIDTH+this.MARGIN && loc.y >= this.MARGIN && loc.y <= this.WIDTH+this.MARGIN)            
         {
             var key = this.locToCell(loc);       
-            var skey = `${key.row}|${key.col}`
-            var gridCopy = {...this.state.gridData}
-            if (gridCopy[skey]){
-                gridCopy[skey]=null;                    
-            }     
-            else{                
-                gridCopy[skey] = {color:this.state.paintingColor};                              
-            }   
+            var skey = `${key.row}|${key.col}`                                               ;
+            
             const payload = {
-                'updateCommand':{'command':gridCopy[skey]!==null?'PAINT':'DELETE', 'location':skey, 'color':this.state.paintingColor},
+                'updateCommand':{'command':'PAINT', 'location':skey, 'color':this.state.paintingColor},
                 'updatedBy':this.state.gridId
             }                                                                     
             this.props.dispatch({

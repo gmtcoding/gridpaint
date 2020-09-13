@@ -3,3 +3,6 @@ This React webapp let's users connected to the flask server app update a shared 
 ## Tech Stack
 - React
 - Flask-SocketIO
+
+## Preview
+![](screengrab.gif)
